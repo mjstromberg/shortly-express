@@ -26,40 +26,32 @@ app.use(express.static(__dirname + '/public'));
 app.use(session({secret: 'apple'}));
 var sess;
 
+var checkUser = function(req, res, cb) {
+  !req.session.username ? res.redirect('/login') : cb();
+};
+
 app.get('/',
 function(req, res) {
-  sess = req.session;
-
-  if (!sess.username) {
-    res.redirect('/login');
-  } else {
+  checkUser(req, res, function() {
     res.render('index');
-  }
+  });
 });
 
 app.get('/create', 
 function(req, res) {
-  sess = req.session;
-
-  if (!sess.username) {
-    res.redirect('/login');
-  } else {
+  checkUser(req, res, function() {
     res.render('index');
-  }
+  });
 });
 
 app.get('/links', 
 function(req, res) {
-  sess = req.session;
 
-  if (!sess.username) {
-    res.redirect('/login');
-  } else {
+  checkUser(req, res, function() {
     Links.reset().fetch().then(function(links) {
       res.status(200).send(links.models);
     });
-  }
-
+  });
 });
 
 app.post('/links', 
@@ -134,8 +126,13 @@ app.post('/login', function(req, res) {
 });
 
 app.get('/login', function(req, res) {
-  res.end();
+  res.render('login');
 });
+
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
