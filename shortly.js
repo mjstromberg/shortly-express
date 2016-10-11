@@ -39,14 +39,27 @@ function(req, res) {
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  sess = req.session;
+
+  if (!sess.username) {
+    res.redirect('/login');
+  } else {
+    res.render('index');
+  }
 });
 
 app.get('/links', 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
+  sess = req.session;
+
+  if (!sess.username) {
+    res.redirect('/login');
+  } else {
+    Links.reset().fetch().then(function(links) {
+      res.status(200).send(links.models);
+    });
+  }
+
 });
 
 app.post('/links', 
@@ -98,12 +111,15 @@ app.post('/signup', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
+  sess = req.session;
+
   var username = req.body.username;
   var password = req.body.password;
   Users.query({where: {username: username, password: password}})
     .fetchOne()
     .then(function(model) {
       if (model) {
+        sess.username = username;
         res.redirect('/');
       } else {
         res.redirect('/login');
@@ -117,6 +133,9 @@ app.post('/login', function(req, res) {
     });
 });
 
+app.get('/login', function(req, res) {
+  res.end();
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
