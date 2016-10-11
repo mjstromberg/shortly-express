@@ -24,7 +24,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 // Add session
 app.use(session({secret: 'apple'}));
-var sess;
 
 var checkUser = function(req, res, cb) {
   !req.session.username ? res.redirect('/login') : cb();
@@ -91,6 +90,8 @@ function(req, res) {
 /************************************************************/
 
 app.post('/signup', function(req, res) {
+  var sess = req.session;
+
   var username = req.body.username;
   var password = req.body.password;
   Users.create({
@@ -98,12 +99,13 @@ app.post('/signup', function(req, res) {
     password: password
   })
   .then(function(newUser) {
+    sess.username = username;
     res.redirect('/');
   });
 });
 
 app.post('/login', function(req, res) {
-  sess = req.session;
+  var sess = req.session;
 
   var username = req.body.username;
   var password = req.body.password;
@@ -131,6 +133,16 @@ app.get('/login', function(req, res) {
 
 app.get('/signup', function(req, res) {
   res.render('signup');
+});
+
+app.get('/logout', function(req, res) {
+  req.session.destroy(function(error, success) {
+    if (error) {
+      console.log('Session not destroyed!');
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 
