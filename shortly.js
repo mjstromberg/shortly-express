@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -21,11 +22,19 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+// Add session
+app.use(session({secret: 'apple'}));
+var sess;
 
-
-app.get('/', 
+app.get('/',
 function(req, res) {
-  res.render('index');
+  sess = req.session;
+
+  if (!sess.username) {
+    res.redirect('/login');
+  } else {
+    res.render('index');
+  }
 });
 
 app.get('/create', 
@@ -76,6 +85,37 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  Users.create({
+    username: username,
+    password: password
+  })
+  .then(function(newUser) {
+    res.redirect('/');
+  });
+});
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  Users.query({where: {username: username, password: password}})
+    .fetchOne()
+    .then(function(model) {
+      if (model) {
+        res.redirect('/');
+      } else {
+        res.redirect('/login');
+      }
+    })
+    .catch(function(err) {
+      throw {
+        type: 'LoginError',
+        message: 'Failed to login properly'
+      };
+    });
+});
 
 
 /************************************************************/
