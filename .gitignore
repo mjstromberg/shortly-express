@@ -2,6 +2,8 @@ node_modules
 db/*.sqlite
 *.DS_Store
 
+oauth.js
+
 # Floobits
 .floo
 .floobit
